@@ -45,6 +45,8 @@
             android:name="com.codepath.apps.tumblrsnap.activities.SettingsActivity"
             android:label="@string/title_activity_settings" >
         </activity>
+
+        <service android:name="com.codepath.apps.tumblrsnap.TumblrUploadService" />
     </application>
 
 </manifest>

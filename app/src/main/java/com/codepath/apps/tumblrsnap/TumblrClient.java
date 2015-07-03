@@ -1,11 +1,15 @@
 package com.codepath.apps.tumblrsnap;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import com.codepath.oauth.OAuthBaseClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 import org.scribe.builder.api.Api;
 import org.scribe.builder.api.TumblrApi;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 
 public class TumblrClient extends OAuthBaseClient {
     public static final Class<? extends Api> REST_API_CLASS = TumblrApi.class;
@@ -37,5 +41,14 @@ public class TumblrClient extends OAuthBaseClient {
         params.put("limit", "20");
         params.put("api_key", REST_CONSUMER_KEY);
         client.get(getApiUrl("user/dashboard"), params, handler);
+    }
+
+    public void createPhotoPost(String blog, final byte[] bytes, final AsyncHttpResponseHandler handler) {
+        RequestParams params = new RequestParams();
+        params.put("type", "photo");
+        params.put("tags", "cptumblrsnap");
+        params.put("data", new ByteArrayInputStream(bytes), "image.png");
+
+        client.post(getApiUrl(String.format("blog/%s/post?type=photo&tags=cptumblrsnap", blog)), params, handler);
     }
 }

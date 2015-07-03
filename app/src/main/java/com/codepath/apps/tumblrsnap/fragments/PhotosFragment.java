@@ -7,16 +7,17 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Locale;
 
-import android.content.DialogInterface;
+import android.content.*;
 import android.graphics.BitmapFactory;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
+import android.widget.Toast;
+import com.codepath.apps.tumblrsnap.TumblrUploadService;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -57,6 +58,11 @@ public class PhotosFragment extends Fragment {
 			Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.fragment_photos, container, false);
 		setHasOptionsMenu(true);
+
+		IntentFilter filter = new IntentFilter(ResponseReceiver.ACTION_RESP);
+		filter.addCategory(Intent.CATEGORY_DEFAULT);
+		ResponseReceiver receiver = new ResponseReceiver();
+		getActivity().registerReceiver(receiver, filter);
 		return view;
 	}
 	
@@ -185,24 +191,6 @@ public class PhotosFragment extends Fragment {
 
 			// bm = Bitmap.createScaledBitmap(bm, 70, 70, true);
 			photoBitmap = bm;
-
-			String path = getActivity().getFilesDir().getPath()+ "/codepath/tumblr";
-			f.delete();
-			OutputStream fOut = null;
-			File file = new File(path, String.valueOf(System
-					.currentTimeMillis()) + ".jpg");
-			try {
-				fOut = new FileOutputStream(file);
-				bm.compress(Bitmap.CompressFormat.JPEG, 85, fOut);
-				fOut.flush();
-				fOut.close();
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
 			postPhotoToAccount();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -212,6 +200,12 @@ public class PhotosFragment extends Fragment {
 	private void postPhotoToAccount()
 	{
 		//TODO start Service to post Photos
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		photoBitmap.compress(Bitmap.CompressFormat.PNG, 100, bos);
+		byte[] data = bos.toByteArray();
+		Intent uploadIntent = new Intent(getActivity(), TumblrUploadService.class);
+		uploadIntent.putExtra("photo", data);
+		getActivity().startService(uploadIntent);
 	}
 
 	private void reloadPhotos()
@@ -263,5 +257,16 @@ public class PhotosFragment extends Fragment {
 				Log.d("DEBUG", arg0.toString());
 			}
 		});
+	}
+
+	// Broadcast receiver that will receive data from service
+	public class ResponseReceiver extends BroadcastReceiver {
+		public static final String ACTION_RESP =
+				"com.codepath.intent.action.MESSAGE_PROCESSED";
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			Toast.makeText(getActivity(), "Response received", Toast.LENGTH_SHORT).show();
+		}
 	}
 }
